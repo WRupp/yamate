@@ -7,7 +7,7 @@ from yamate.utils import measurement_converter as mc
 
 
 def vvh_uniaxial():
-    """ Performs an uniaxial test to the visco_hydrolysis material and save results of the experiment in a '.pkl'' file"""
+    """ Performs an uniaxial test to the visco_hydrolysis material and save results of the experiment in a '.csv' file"""
 
     props = {
         "mu": 948.45,
@@ -72,7 +72,7 @@ def vvh_uniaxial():
     results["axial_displacement"] = axial_displacements
     results["axial_stress"] = axial_stresses
     results["axial_force"] = axial_forces
-    results.to_pickle("vvh_uniaxial_example.pkl")
+    results.to_csv("vvh_uniaxial_example.csv")
 
 
 if __name__ == "__main__":
