@@ -2,17 +2,11 @@
 ### Yet-Another MATerial parameter Estimation toolbox
 Provides helper functions for estimating material properties.
 
-**yamate is currently in (very) early development.**
-
-yamate uses scipy as an backend for optimization jobs. 
-
 ---
 ## Installation
 clone this repository and install it by running
 
 `pip install setup.py`
-
-soon to be available in pypi.
 
 ---
 ## Examples
