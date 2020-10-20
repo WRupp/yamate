@@ -36,7 +36,7 @@ def vvh_uniaxial():
         "FlagHardening": 3.0,
         "FlagPlasDam": 1.0,
         "FlagHidrDam": 1.0,
-        "params": np.ones(3, dtype=np.int),
+        "params": np.ones(3, dtype=int),
         "alpha_guess": 1.0e-12,
     }
 
