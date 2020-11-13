@@ -5,7 +5,7 @@ import numpy as np
 from yamate.utils import mathroutines as mr
 from yamate.materials import material
 
-class Properties():
+class Properties:
 
     names = [
     "mu", "nu", "Bulk",
@@ -65,7 +65,7 @@ class Properties():
         self.alpha_guess = alpha_guess
 
 
-class variational_visco_hydrolysis(material.Material):
+class VariationalViscoHydrolysis(material.Material):
 
     name = "variational_visco_hydro"
 
@@ -79,7 +79,7 @@ class variational_visco_hydrolysis(material.Material):
 
         self.properties = Properties(**props)
 
-    def Hencky(self, props, etr, Ei):
+    def hencky(self, props, etr, Ei):
 
         eps = np.zeros(3)
         G = props.mu
@@ -87,9 +87,9 @@ class variational_visco_hydrolysis(material.Material):
         if ( etr.shape == (3,) ) :
             eps = np.array([ etr[0] , etr[1], etr[2]])
         else :
-            eps[0] = mr.Tensor_Inner_Product(etr,Ei[:,:,0])
-            eps[1] = mr.Tensor_Inner_Product(etr,Ei[:,:,1])
-            eps[2] = mr.Tensor_Inner_Product(etr,Ei[:,:,2])
+            eps[0] = mr.tensor_inner_product(etr,Ei[:,:,0])
+            eps[1] = mr.tensor_inner_product(etr,Ei[:,:,1])
+            eps[2] = mr.tensor_inner_product(etr,Ei[:,:,2])
 
         vdWtr = 2 * G * eps
 
@@ -104,7 +104,7 @@ class variational_visco_hydrolysis(material.Material):
         
         return dWtr, d2Wtr, energye
 
-    def KappaFunctions(self, props, alpha):
+    def kappa_functions(self, props, alpha):
 
         if props.FlagHardening == 1 :
             kappa = props.kHiso * alpha
@@ -123,7 +123,7 @@ class variational_visco_hydrolysis(material.Material):
         
         return kappa, dkappa, energyp
         
-    def VolFunctions(self, props, J):
+    def vol_functions(self, props, J):
 
         # G = props.mu
         Bulk = props.Bulk
@@ -132,17 +132,17 @@ class variational_visco_hydrolysis(material.Material):
         energyv = 0.5 * (Bulk) * ( np.log(J) ** 2.0 )
         return dUdJ, energyv
 
-    def ExpMatrixSym3x3(self, M):
+    def exp_matrix_sym_3x3(self, M):
 
         eigenvalues, eigenvectors = np.linalg.eigh( M )
 
         expM = 0.0e0
         for k in range(3):
-            expM = expM + np.exp(eigenvalues[k]) * mr.Tensor_Product(eigenvectors[:,k], eigenvectors[:,k])
+            expM = expM + np.exp(eigenvalues[k]) * mr.tensor_product(eigenvectors[:,k], eigenvectors[:,k])
 
         return expM
 
-    def ViscoArrasto(self, props, alpha):
+    def visco_arrasto(self, props, alpha):
 
         s0 = props.s0
         scv = props.scv 
@@ -163,7 +163,7 @@ class variational_visco_hydrolysis(material.Material):
 
         return fArr, dfArr, d2fArr
 
-    def HydroFunc(self, props, vin, vin1, deltat):
+    def hydro_func(self, props, vin, vin1, deltat):
 
         Sy0 = props.Sy0
         m  = props.km
@@ -207,7 +207,7 @@ class variational_visco_hydrolysis(material.Material):
 
         return VARS #, pvin, pvin1
 
-    def ComputeExpressions(self, props, vin, vin1, deltat):
+    def compute_expressions(self, props, vin, vin1, deltat):
 
         Sy0 = props.Sy0
         m  = props.km
@@ -243,8 +243,8 @@ class variational_visco_hydrolysis(material.Material):
 
         dtheta = dn + theta*((delta_alpha*(Ytheta**kS)/kN) + Ddh)  
 
-        fArr, dfArr, _ = self.ViscoArrasto(props, alphan1)
-        kappa, _, _ = self.KappaFunctions(props, alphan1)
+        fArr, dfArr, _ = self.visco_arrasto(props, alphan1)
+        kappa, _, _ = self.kappa_functions(props, alphan1)
 
         FATOR = (kR/2.0) * (Ddh/deltat)**2.0
 
@@ -265,21 +265,21 @@ class variational_visco_hydrolysis(material.Material):
 
         return FA, FB, FG
 
-    def RMFunctions(self, dWede , M , props, vin, vin1, deltat):
+    def rm_functions(self, dWede , M , props, vin, vin1, deltat):
 
         VFun = np.empty(2)
 
-        FA, FB, FG = self.ComputeExpressions(props, vin, vin1, deltat)
+        FA, FB, FG = self.compute_expressions(props, vin, vin1, deltat)
 
-        Seq = mr.Tensor_Inner_Product(dWede,M)
+        Seq = mr.tensor_inner_product(dWede,M)
         VFun[0] = -FG * Seq + FA + deltat * FB
-        Vars = self.HydroFunc(props, vin, vin1, deltat)
+        Vars = self.hydro_func(props, vin, vin1, deltat)
         VFun[1] = Vars
 
         return VFun
 
     # Muda pvin1 - apenas
-    def ComputeHydrolytic(self, props,vin,vin1,deltat):
+    def compute_hydrolytic(self, props,vin,vin1,deltat):
         
         m  = props.km
         n  = props.knd
@@ -323,7 +323,7 @@ class variational_visco_hydrolysis(material.Material):
         pvin1[0] = 1 - dn1
         pvin1[2] = dhn + Ddh
 
-        FVAL = self.HydroFunc(props, pvin, pvin1, deltat)
+        FVAL = self.hydro_func(props, pvin, pvin1, deltat)
 
         erro = 1.0
         TOL = 1.0e-6
@@ -342,14 +342,14 @@ class variational_visco_hydrolysis(material.Material):
 
             pvin1[2] = pvin[2] + Ddh
 
-            FVAL = self.HydroFunc(props, pvin, pvin1, deltat)
+            FVAL = self.hydro_func(props, pvin, pvin1, deltat)
 
             erro = abs(FVAL)
 
             cont=cont+1
 
             if  ( (cont > 20) or (Ddh < 0.0) ) :
-                print('ComputeHydrolytic: Your circuit`s dead, there`s something wrong. Can you hear me, Major Tom?')
+                print('compute_hydrolytic: Your circuit`s dead, there`s something wrong. Can you hear me, Major Tom?')
                 quit()
                 return
                 
@@ -358,7 +358,7 @@ class variational_visco_hydrolysis(material.Material):
         return VARS
 
     # Muda vin
-    def ResidFunctions(self, epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh):
+    def resid_functions(self, epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh):
 
         # dWede = np.zeros((3,3))
         # dWedej = np.zeros((3,3))
@@ -389,9 +389,9 @@ class variational_visco_hydrolysis(material.Material):
         alphan1 = alphan + delta_alpha
         eps = epstr - delta_alpha*M
 
-        dWedej, _, energye = self.Hencky(props, eps, Ea)
-        dummy[0], dummy[1], energyp = self.KappaFunctions(props, alphan1)
-        dummy[0], energyv = self.VolFunctions(props, J)
+        dWedej, _, energye = self.hencky(props, eps, Ea)
+        dummy[0], dummy[1], energyp = self.kappa_functions(props, alphan1)
+        dummy[0], energyv = self.vol_functions(props, J)
 
         Yn1 = energye + energyv + energyp
         Yzeta = (1-zeta)*Yn+zeta*Yn1
@@ -412,12 +412,12 @@ class variational_visco_hydrolysis(material.Material):
         + dWedej[2,2]*Ea[:,:,2]
         )
 
-        VFun = self.RMFunctions(dWede, M , props, pvin, pvin1, deltat)
+        VFun = self.rm_functions(dWede, M , props, pvin, pvin1, deltat)
 
         return VFun
 
     # Muda vin
-    def FixedPointSearch(self, epstr, M, Ea, props, J, vin, vin1, deltat, DELTA, flag_where):
+    def fixed_point_search(self, epstr, M, Ea, props, J, vin, vin1, deltat, DELTA, flag_where):
 
         dummy = np.zeros(3)
 
@@ -450,11 +450,11 @@ class variational_visco_hydrolysis(material.Material):
 
         delta_alpha0=delta_alpha
 
-        VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
+        VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
 
         while ((VFun[0] > 0.0e0) and (delta_alpha >= 1.0e16)):
             delta_alpha=delta_alpha*1.0e-1
-            VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
+            VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
             delta_alpha0=delta_alpha
 
         if ((VFun[0] > 0.0e0) and (abs(delta_alpha) <= 1.0e-16)):
@@ -465,7 +465,7 @@ class variational_visco_hydrolysis(material.Material):
                 # ! Prucura por residuo positivo
                 while (VFun[0] < 0.0e0):
                     delta_alpha=delta_alpha0*((10)**fator)
-                    VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
+                    VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
                     fator=fator+1
 
                 a=delta_alpha0
@@ -477,7 +477,7 @@ class variational_visco_hydrolysis(material.Material):
 
                 # ! INICIO - Metodo da bissecao - Procura por delta_alpha com Ddh fixo
                 while (flag_restart == 1):
-                    VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, c, Ddh)
+                    VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, c, Ddh)
 
                     if (VFun[0] < 0.0e0):
                         a = c
@@ -493,7 +493,7 @@ class variational_visco_hydrolysis(material.Material):
                                 print("Deu merda!!!!")
                                 exit 
                             else:
-                                VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, a, Ddh)
+                                VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, a, Ddh)
                                 DELTA = [a, Ddh]
                                 return DELTA
                         else:
@@ -506,9 +506,9 @@ class variational_visco_hydrolysis(material.Material):
                 alphan1 = alphan + delta_alpha
                 eps = epstr - delta_alpha*M
 
-                _, _, energye = self.Hencky(props, eps, Ea)
-                dummy[0], dummy[1], energyp = self.KappaFunctions(props, alphan1)
-                dummy[0], energyv = self.VolFunctions(props, J)
+                _, _, energye = self.hencky(props, eps, Ea)
+                dummy[0], dummy[1], energyp = self.kappa_functions(props, alphan1)
+                dummy[0], energyv = self.vol_functions(props, J)
                 Yn1 = energye + energyv + energyp
                 Yzeta = (1-zeta)*Yn+zeta*Yn1
 
@@ -522,9 +522,9 @@ class variational_visco_hydrolysis(material.Material):
                 pvin1[3] = alphan1
                 pvin1[4] = Yn1
 
-                Ddh = self.ComputeHydrolytic(props, pvin, pvin1, deltat)
+                Ddh = self.compute_hydrolytic(props, pvin, pvin1, deltat)
 
-                VFun = self.ResidFunctions(epstr, M, Ea, props, J, vin, vin1, deltat, c, Ddh)
+                VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, c, Ddh)
 
                 erro = mr.norm(VFun)
 
@@ -539,7 +539,7 @@ class variational_visco_hydrolysis(material.Material):
         return DELTA
 
     # Muda vin - indiretamente
-    def Return_Mapping(self, etr, Ea, M, J, props, vin, vin1, deltat, flag_where):
+    def return_mapping(self, etr, Ea, M, J, props, vin, vin1, deltat, flag_where):
 
         dummy = np.zeros(3)
         VARS = np.empty(4)
@@ -583,7 +583,7 @@ class variational_visco_hydrolysis(material.Material):
         alphan1 = 0.0e0
         alphan1 = alphan+delta_alpha
 
-        dWedej, _, dummy[0] = self.Hencky(props, vetr, Ea)
+        dWedej, _, dummy[0] = self.hencky(props, vetr, Ea)
 
         dWede  = (
             +  dWedej[0,0]*Ea[:,:,0]
@@ -597,7 +597,7 @@ class variational_visco_hydrolysis(material.Material):
 
         DELTA = [delta_alpha, Ddh]
 
-        DELTA = self.FixedPointSearch(epstr, M, Ea, props, J, vin, vin1, deltat, DELTA, flag_where)
+        DELTA = self.fixed_point_search(epstr, M, Ea, props, J, vin, vin1, deltat, DELTA, flag_where)
 
         delta_alpha = DELTA[0]
         Ddh = DELTA[1]
@@ -606,9 +606,9 @@ class variational_visco_hydrolysis(material.Material):
 
         eps = epstr - delta_alpha*M
 
-        dWedej, _, energye = self.Hencky(props, eps, Ea)
-        dummy[0], dummy[1], energyp = self.KappaFunctions(props, alphan1)
-        dummy[0], energyv = self.VolFunctions(props, J)
+        dWedej, _, energye = self.hencky(props, eps, Ea)
+        dummy[0], dummy[1], energyp = self.kappa_functions(props, alphan1)
+        dummy[0], energyv = self.vol_functions(props, J)
         Yn1 = energye + energyv + energyp
         Yzeta = (1-zeta)*Yn+zeta*Yn1
 
@@ -634,7 +634,7 @@ class variational_visco_hydrolysis(material.Material):
 
 
 
-class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
+class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
 
     def calculate_state(self, F, time=None, **kwargs):
         
@@ -694,19 +694,19 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
 
         Ea = np.empty(shape=(3,3,3))
         for k in range(3):
-            Ea[:,:,k] = mr.Tensor_Product( eigenvectors[:,k], eigenvectors[:,k])
+            Ea[:,:,k] = mr.tensor_product( eigenvectors[:,k], eigenvectors[:,k])
 
         etr = 0.5e0*np.log(eigenvalues)
 
-        dWtrj, _, energye = self.Hencky(self.properties, etr, Ea)
-        kappa, _, energyp = self.KappaFunctions(self.properties, alphan)
-        dUdJ, energyv = self.VolFunctions(self.properties, J)
+        dWtrj, _, energye = self.hencky(self.properties, etr, Ea)
+        kappa, _, energyp = self.kappa_functions(self.properties, alphan)
+        dUdJ, energyv = self.vol_functions(self.properties, J)
 
         Yn1 = energye + energyv + energyp 
         
         vin1[4] = Yn1
 
-        Ddh = self.ComputeHydrolytic(self.properties, vin, vin1, deltat)
+        Ddh = self.compute_hydrolytic(self.properties, vin, vin1, deltat)
 
         Ddp = 0
         dn1 = dn + (Ddp + Ddh)
@@ -724,7 +724,7 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
             trial_state.error = True
             return trial_state
 
-        FA, FB, FG = self.ComputeExpressions(self.properties, vin, vin1, deltat)
+        FA, FB, FG = self.compute_expressions(self.properties, vin, vin1, deltat)
 
         dWtr = (
             + dWtrj[0,0]*Ea[:,:,0]
@@ -734,15 +734,15 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
 
         devdWtr = mr.deviatoric(dWtr)
 
-        norma=np.sqrt((mr.Tensor_Inner_Product(dWtr, dWtr)))
+        norma=np.sqrt((mr.tensor_inner_product(dWtr, dWtr)))
 
         if (norma == 0):
             M = I
         else:
-            norma=np.sqrt(mr.Tensor_Inner_Product(devdWtr, devdWtr))
+            norma=np.sqrt(mr.tensor_inner_product(devdWtr, devdWtr))
             M = np.sqrt(3.0e0/2.0e0)*devdWtr/norma
             
-        Ttrial = mr.Tensor_Inner_Product(dWtr, M)
+        Ttrial = mr.tensor_inner_product(dWtr, M)
 
         finelast =  kappa + ((1-dn1)*Sy0 + deltat*FB )/FG
         finelast2 = (FA + deltat*FB)/FG
@@ -774,9 +774,9 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
 
             dWdC = np.matmul( Fpn_inv, np.matmul( dWdCtr, np.transpose(Fpn_inv) ) )
 
-            DEV_dWdC = dWdC - (1.0e0/3.0e0)*mr.Tensor_Inner_Product(dWdC, Cn1)* np.linalg.inv(Cn1)
+            DEV_dWdC = dWdC - (1.0e0/3.0e0)*mr.tensor_inner_product(dWdC, Cn1)* np.linalg.inv(Cn1)
 
-            dUdJ, energyv = self.VolFunctions(self.properties, J)
+            dUdJ, energyv = self.vol_functions(self.properties, J)
 
             stress0 = 2.0e0*(J**(-2.0e0/3.0e0))*DEV_dWdC + J * dUdJ * np.linalg.inv(Cn1)
 
@@ -788,7 +788,7 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
             # saving stress and internal variables to a trial state
             trial_state.cauchy_stress = mr.to_voigt(Sn1)
 
-            fArrn1, _, _ = self.ViscoArrasto(self.properties, alphan1)
+            fArrn1, _, _ = self.visco_arrasto(self.properties, alphan1)
 
             trial_state.Fpn = Fpn
             trial_state.vin = [wn1, dpn1, dhn1, alphan1, Yn1, 0, 0, 0, 0, 0] #rever se não dá problema por ser lista
@@ -799,7 +799,7 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
             trial_state.flag_ELAST = 0
 
             vin1[7]=qfunc
-            VARS, dWede = self.Return_Mapping(etr, Ea, M, J, self.properties, vin, vin1, deltat, 1)
+            VARS, dWede = self.return_mapping(etr, Ea, M, J, self.properties, vin, vin1, deltat, 1)
             
             alphan1 = VARS[0]
             Ddp     = VARS[1]
@@ -814,13 +814,13 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
 
             alphaM = delta_alpha * M
 
-            expM = self.ExpMatrixSym3x3(alphaM)
+            expM = self.exp_matrix_sym_3x3(alphaM)
 
             Fpn1 = np.matmul(expM, Fpn)
 
-            vdWede[0] = mr.Tensor_Inner_Product(dWede, Ea[:,:,0])
-            vdWede[1] = mr.Tensor_Inner_Product(dWede, Ea[:,:,1])
-            vdWede[2] = mr.Tensor_Inner_Product(dWede, Ea[:,:,2])
+            vdWede[0] = mr.tensor_inner_product(dWede, Ea[:,:,0])
+            vdWede[1] = mr.tensor_inner_product(dWede, Ea[:,:,1])
+            vdWede[2] = mr.tensor_inner_product(dWede, Ea[:,:,2])
 
             dWdCtr = 0.0e0
             for k in range(3):
@@ -828,15 +828,15 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
 
             dWdC = np.matmul( Fpn_inv, np.matmul(dWdCtr, np.transpose(Fpn_inv)))
 
-            DEV_dWdC = dWdC - (1.0e0/3.0e0)*mr.Tensor_Inner_Product(dWdC, Cn1)* np.linalg.inv(Cn1)
+            DEV_dWdC = dWdC - (1.0e0/3.0e0)*mr.tensor_inner_product(dWdC, Cn1)* np.linalg.inv(Cn1)
 
             wn1=(1.0e0 - dn1)
 
-            dUdJ, energyv = self.VolFunctions(self.properties, J)
+            dUdJ, energyv = self.vol_functions(self.properties, J)
 
             vin1 = [wn1, dpn1, dhn1, alphan1, Yn1, 0, 0, 0, 0, 0] #ver se nao dá problema por ser lista
 
-            FA, FB, FG = self.ComputeExpressions(self.properties, vin, vin1, deltat)
+            FA, FB, FG = self.compute_expressions(self.properties, vin, vin1, deltat)
 
             stress0 = 2.0e0*(J**(-2.0e0/3.0e0))*DEV_dWdC + J * dUdJ * np.linalg.inv(Cn1)
 
@@ -848,7 +848,7 @@ class VarViscoHydrolysis_Axi(variational_visco_hydrolysis):
             # saving stress and internal variables to a trial state
             trial_state.cauchy_stress = mr.to_voigt(Sn1)
 
-            fArrn1, _, _ = self.ViscoArrasto(self.properties, alphan1)
+            fArrn1, _, _ = self.visco_arrasto(self.properties, alphan1)
 
             trial_state.Fpn =Fpn1
             trial_state.vin = [wn1, dpn1, dhn1, alphan1, Yn1, delta_alpha, fArrn1, 0, 0, 0]

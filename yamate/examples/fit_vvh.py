@@ -15,7 +15,7 @@ from yamate.fit import Model
 def simulate_vvh_uniaxial_compression(material_properties):
     """Simulates the uniaxial procedure for the visco_hydrolysis material, where some of the constitutive parameters are unknown"""
 
-    my_material = vvh.VarViscoHydrolysis_Axi(props=material_properties)
+    my_material = vvh.VariationalViscoHydrolysisAxi(props=material_properties)
 
     # define and run the experiment
     initial_radius = 3.0

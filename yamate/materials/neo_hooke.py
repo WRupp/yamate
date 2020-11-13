@@ -6,7 +6,7 @@ from yamate.materials import material
 from yamate.utils import mathroutines
 
 
-class Neo_Hookean(material.Material):
+class NeoHookean(material.Material):
     """Compressible form of the Neo-Hookean as described in 'Computational Methods for Plasticity: Theory and Applications - Souza Neto'
     pg 526, §13.47'"""
 

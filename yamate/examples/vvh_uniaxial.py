@@ -40,7 +40,7 @@ def vvh_uniaxial():
         "alpha_guess": 1.0e-12,
     }
 
-    meu_mat = vvh.VarViscoHydrolysis_Axi(props=props)
+    meu_mat = vvh.VariationalViscoHydrolysisAxi(props=props)
 
     # defining the experiment
     initial_radius = 3.0

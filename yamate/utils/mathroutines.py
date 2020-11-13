@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def Tensor_Inner_Product(a, b):
+def tensor_inner_product(a, b):
     return np.tensordot(a, b, axes=2)
 
 
@@ -9,7 +9,7 @@ def Tensor_Inner_Product(a, b):
 #     return np.tensordot(a, b, axes=0)
 
 
-def Tensor_Product(a_vector, b_vector):
+def tensor_product(a_vector, b_vector):
     "Pelo que entendi é o produto tensorial de dois vetores coluna"
     Tensor = np.empty((a_vector.shape[0], b_vector.shape[0]))
 

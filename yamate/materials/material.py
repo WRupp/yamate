@@ -11,18 +11,18 @@ class State:
     internal_variables = None
 
 
-class Constitutive_Parameters:
+class ConstitutiveParameters:
     pass
 
 
-class Internal_Variables:
+class InternalVariables:
     pass
 
 
 class Material:
 
     name = "base"
-    constitutive_parameters = Constitutive_Parameters()  # Preciso disso mesmo?
+    constitutive_parameters = ConstitutiveParameters()  # Preciso disso mesmo?
     state = State()
     # internal_variables = Internal_Variables()
 

@@ -52,7 +52,7 @@ def test_visco_hydrolysis():
     "alpha_guess":1.0e-12
     }
 
-    meu_mat = vvh.VarViscoHydrolysis_Axi(props=props)
+    meu_mat = vvh.VariationalViscoHydrolysisAxi(props=props)
 
     F = np.eye(3)
     time = 1.0
