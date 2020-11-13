@@ -25,5 +25,6 @@ one may use [f2py](https://numpy.org/doc/stable/f2py/) to bind fortran and pytho
 
 ---
 ## Citing Yamate and Contributing
+yamate is currently not open for contributions
 
 
