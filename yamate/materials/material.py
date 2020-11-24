@@ -22,7 +22,7 @@ class InternalVariables:
 class Material:
 
     name = "base"
-    constitutive_parameters = ConstitutiveParameters()  # Preciso disso mesmo?
+    constitutive_parameters = ConstitutiveParameters()
     state = State()
     # internal_variables = Internal_Variables()
 

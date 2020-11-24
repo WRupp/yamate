@@ -10,7 +10,7 @@ def tensor_inner_product(a, b):
 
 
 def tensor_product(a_vector, b_vector):
-    "Pelo que entendi é o produto tensorial de dois vetores coluna"
+    """Tensor product between two vectors"""
     Tensor = np.empty((a_vector.shape[0], b_vector.shape[0]))
 
     for i in range(a_vector.shape[0]):
@@ -24,7 +24,7 @@ def norm(a):
 
 
 def deviatoric(tensor):
-    """Returns the deviatoric part of a tensor"""
+    """calculates the deviatoric part of a tensor"""
     I = np.eye(tensor.shape[0])
     T_dev = tensor - (1.0e0 / 3.0e0) * np.trace(tensor) * I
     return T_dev
