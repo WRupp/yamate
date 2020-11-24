@@ -3,7 +3,7 @@ import pandas as pd
 
 from yamate.materials import visco_hydrolysis as vvh
 from yamate.procedures import uniaxial
-from yamate.utils import conversor_medidas as cm
+from yamate.utils import measurement_converter as mc
 
 
 def vvh_uniaxial():
@@ -46,16 +46,16 @@ def vvh_uniaxial():
     initial_radius = 3.0
     initial_height = 6.0
 
-    strain_rate = cm.taxa_nominal_com_compliance(
-        3000, tamanho_inicial=initial_height, deslocamento_real=-1.7
+    strain_rate = mc.nominal_rate_with_compliance(
+        3000, initial_size=initial_height, displacement=-1.7
     )
 
     times = np.linspace(0.0, 3000.0, 301)
-    axial_stretches = cm.de_tempo_para_elongamento(
-        taxa_def_eng=strain_rate, tempos=times
+    axial_stretches = mc.time_to_stretch(
+        strain_rate_eng=strain_rate, time=times
     )
-    axial_displacements = cm.de_tempo_para_deslocamento(
-        taxa_def=strain_rate, tempos=times, tamanho_inicial=initial_height
+    axial_displacements = mc.time_to_displacement(
+        strain_rate=strain_rate, time=times, initial_size=initial_height
     )
 
     axial_stresses, transversal_stretches = uniaxial.uniaxial_procedure(

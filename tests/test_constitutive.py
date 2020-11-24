@@ -3,8 +3,7 @@ import numpy as np
 
 from yamate.materials import mooney_rivlin as mrn
 from yamate.materials import visco_hydrolysis as vvh
-from yamate.procedures import uniaxial
-from yamate.utils import conversor_medidas as cm
+
 
 def test_mooney_rivlin():
     

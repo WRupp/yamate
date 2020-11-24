@@ -2,10 +2,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from yamate.utils import errors
-from yamate.utils import conversor_medidas as cm
+from yamate.utils import measurement_converter as mc
 from yamate.procedures import uniaxial
 from yamate.materials import visco_hydrolysis as vvh
 
@@ -22,14 +21,13 @@ def simulate_vvh_uniaxial_compression(material_properties):
     initial_height = 6.0
 
     times = np.linspace(0.0, 3000.0, 301)
-    strain_rate = cm.taxa_nominal_com_compliance(
-        3000, tamanho_inicial=initial_height, deslocamento_real=-1.7
+    strain_rate = mc.nominal_rate_with_compliance(
+        3000, initial_size=initial_height, displacement=-1.7
     )
-    axial_stretches = cm.de_tempo_para_elongamento(
-        taxa_def_eng=strain_rate, tempos=times
+    axial_stretches = mc.time_to_stretch(
+        strain_rate_eng=strain_rate, time=times
     )
-    # axial_displacement = cm.de_tempo_para_deslocamento(taxa_def=strain_rate, tempos=times, tamanho_inicial=initial_height)
-
+   
     axial_stresses, transversal_stretches = uniaxial.uniaxial_procedure(
         times, axial_stretches, my_material
     )

@@ -119,7 +119,7 @@ class VariationalViscoHydrolysis(material.Material):
             dkappa = props.kHiso * props.knh * (np.exp(props.knh * alpha) )
             energyp = props.kHiso* ((np.exp(props.knh * alpha - 1) / props.knh - alpha))
         else:
-            raise Exception("FlagHardening não definida corretamente")
+            raise Exception("FlagHardening is not correctly defined")
         
         return kappa, dkappa, energyp
         
@@ -205,7 +205,7 @@ class VariationalViscoHydrolysis(material.Material):
 
         VARS = TERM1 + TERM2 + TERM3
 
-        return VARS #, pvin, pvin1
+        return VARS
 
     def compute_expressions(self, props, vin, vin1, deltat):
 
@@ -278,7 +278,6 @@ class VariationalViscoHydrolysis(material.Material):
 
         return VFun
 
-    # Muda pvin1 - apenas
     def compute_hydrolytic(self, props,vin,vin1,deltat):
         
         m  = props.km
@@ -357,7 +356,6 @@ class VariationalViscoHydrolysis(material.Material):
 
         return VARS
 
-    # Muda vin
     def resid_functions(self, epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh):
 
         # dWede = np.zeros((3,3))
@@ -416,7 +414,6 @@ class VariationalViscoHydrolysis(material.Material):
 
         return VFun
 
-    # Muda vin
     def fixed_point_search(self, epstr, M, Ea, props, J, vin, vin1, deltat, DELTA, flag_where):
 
         dummy = np.zeros(3)
@@ -462,7 +459,7 @@ class VariationalViscoHydrolysis(material.Material):
         else:
             while ((erro > TOL) and (cont < 20)):
                 fator = 1
-                # ! Prucura por residuo positivo
+                # Search for a positive residue
                 while (VFun[0] < 0.0e0):
                     delta_alpha=delta_alpha0*((10)**fator)
                     VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, delta_alpha, Ddh)
@@ -475,7 +472,7 @@ class VariationalViscoHydrolysis(material.Material):
                 flag_restart = 1
                 conti = 1
 
-                # ! INICIO - Metodo da bissecao - Procura por delta_alpha com Ddh fixo
+                # ! BEGIN - Bissection Method - Finds delta_alpha with fixed Ddh
                 while (flag_restart == 1):
                     VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, c, Ddh)
 
@@ -490,7 +487,7 @@ class VariationalViscoHydrolysis(material.Material):
                         conti=conti+1
                         if ((0.5e0*abs(a-b) < 1.0e-16) or (conti >= 50)):
                             if (conti>=50):
-                                print("Deu merda!!!!")
+                                print("Bissection method error")
                                 exit 
                             else:
                                 VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, a, Ddh)
@@ -498,9 +495,9 @@ class VariationalViscoHydrolysis(material.Material):
                                 return DELTA
                         else:
                             c=0.5e0*(a+b)
-                # ! FIM -  - Metodo da bissecao
+                # ! END - BISSECTION METHOD
 
-                # ! INICIO - Metodo da Newton - Procura por Ddh com delta_alpha fixo
+                # ! BEGIN - Newton's method - Search for Ddh with fixed delta_alpha 
                 delta_alpha = c
 
                 alphan1 = alphan + delta_alpha
@@ -531,14 +528,13 @@ class VariationalViscoHydrolysis(material.Material):
                 cont = cont + 1
 
                 if ((delta_alpha < 1.0e-16) or  (Ddh < 0.0e0) or (cont > 20)):
-                    print('ERRO')
+                    print('ERROR')
                     return
                 
         DELTA = [delta_alpha, Ddh]
 
         return DELTA
 
-    # Muda vin - indiretamente
     def return_mapping(self, etr, Ea, M, J, props, vin, vin1, deltat, flag_where):
 
         dummy = np.zeros(3)
@@ -640,7 +636,7 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
         
         trial_state = copy.deepcopy(self.state)
 
-        if time == 0.0: return trial_state # Não sei pra quê, mas enfim...
+        if time == 0.0: return trial_state
         
         trial_state.F = copy.deepcopy(F)
         Fn1 = copy.deepcopy(F)
@@ -749,7 +745,7 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
         
         ratio = abs(finelast/finelast2)
         if (abs(ratio-1.0e0) > 1.0e-8) :
-            print('Probremas!!!')
+            print('finelast ratio has found a problem')
             raise ValueError
 
         ftrial = - Ttrial + finelast
@@ -791,7 +787,7 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
             fArrn1, _, _ = self.visco_arrasto(self.properties, alphan1)
 
             trial_state.Fpn = Fpn
-            trial_state.vin = [wn1, dpn1, dhn1, alphan1, Yn1, 0, 0, 0, 0, 0] #rever se não dá problema por ser lista
+            trial_state.vin = [wn1, dpn1, dhn1, alphan1, Yn1, 0, 0, 0, 0, 0]
             trial_state.dWdCiso = dWdC
             trial_state.DEV_dWdCiso = DEV_dWdC
         
