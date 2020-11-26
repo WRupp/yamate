@@ -348,10 +348,8 @@ class VariationalViscoHydrolysis(material.Material):
             cont=cont+1
 
             if  ( (cont > 20) or (Ddh < 0.0) ) :
-                print('compute_hydrolytic: Your circuit`s dead, there`s something wrong. Can you hear me, Major Tom?')
-                quit()
-                return
-                
+                raise ValueError("Compute hydrolytic failed.")
+
         VARS = Ddh
 
         return VARS
@@ -487,8 +485,7 @@ class VariationalViscoHydrolysis(material.Material):
                         conti=conti+1
                         if ((0.5e0*abs(a-b) < 1.0e-16) or (conti >= 50)):
                             if (conti>=50):
-                                print("Bissection method error")
-                                exit 
+                                raise RecursionError("Bissection method reached its maximum recursion limit")
                             else:
                                 VFun = self.resid_functions(epstr, M, Ea, props, J, vin, vin1, deltat, a, Ddh)
                                 DELTA = [a, Ddh]
@@ -528,8 +525,7 @@ class VariationalViscoHydrolysis(material.Material):
                 cont = cont + 1
 
                 if ((delta_alpha < 1.0e-16) or  (Ddh < 0.0e0) or (cont > 20)):
-                    print('ERROR')
-                    return
+                    raise RecursionError("Newton method error. Try reducing the timestep.")
                 
         DELTA = [delta_alpha, Ddh]
 
@@ -651,11 +647,8 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
 
         # ! -----------------------------------------------------------------------------------
 
-        if ( np.isnan(Fn1[0,0]) ) :
-            print('Fn1[0,0] is NAN')
-            trial_state.cauchy_stress[:] = -np.log(0.0)            
-            trial_state.error = True
-            return trial_state
+        if np.isnan(Fn1[0,0]): 
+            raise ValueError("Fn1[0,0 is NaN. Check your input deformation tensor F")
 
         vin  = copy.deepcopy( self.state.vin)
         vin1 = copy.deepcopy( self.state.vin)
@@ -671,7 +664,11 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
         timen1 = time
 
         deltat = timen1 - timen
-        assert deltat != 0.0
+        try:
+            assert deltat != 0.0
+        except AssertionError as err:
+            err.args = ("time delta between events must be different than zero!")
+            raise err
 
         Sy0  = self.properties.Sy0
         
@@ -714,11 +711,8 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
         vin1[2] = dhn1
         vin1[3] = vin[3]
 
-        if (np.isnan( vin1[2])) :
-            print('vin1(3) is NAN')
-            trial_state.cauchy_stress[:] = -np.log(0.0)            
-            trial_state.error = True
-            return trial_state
+        if np.isnan(vin1[2]) :
+            raise ValueError("vin1(3) is NaN")
 
         FA, FB, FG = self.compute_expressions(self.properties, vin, vin1, deltat)
 
@@ -744,9 +738,8 @@ class VariationalViscoHydrolysisAxi(VariationalViscoHydrolysis):
         finelast2 = (FA + deltat*FB)/FG
         
         ratio = abs(finelast/finelast2)
-        if (abs(ratio-1.0e0) > 1.0e-8) :
-            print('finelast ratio has found a problem')
-            raise ValueError
+        if abs(ratio-1.0e0) > 1.0e-8:
+            raise ValueError("finelast ratio has found a problem")
 
         ftrial = - Ttrial + finelast
         qfunc = ftrial/finelast

@@ -12,7 +12,12 @@ def uniaxial_procedure(times, axial_stretches, material):
     """
 
     # Assert that all arrays have the same lenght
-    assert len(times) == len(axial_stretches)
+    try: 
+        assert len(times) == len(axial_stretches)
+    except AssertionError as err:
+        err.args = ("Stretches and times arrays do not have the same lenght!")
+        raise err
+    
     axial_stresses = np.empty(len(axial_stretches))
     transversal_stretches = np.empty(len(axial_stretches))
 
